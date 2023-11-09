@@ -1,0 +1,10 @@
+name: pyparse
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - spyder
+  - pip
+  - pip:
+    - -e .[dev,api]
+

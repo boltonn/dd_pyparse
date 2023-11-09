@@ -1,0 +1,24 @@
+[project]
+name = "pyparse"
+version = "0.0.1"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "loguru",
+    "numpy",
+    "pillow",
+    "spyder",
+    "python-magic",
+    "pydantic",
+    "pydantic-settings",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "black", "flake8", "isort"]
+api = ["uvicorn", "gunicorn", "python-multipart", "aiohttp", "fastapi"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[project.scripts]
+api = "pyparse.api:main"
