@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
-NAME = pyparse
+NAME = dd_pyparse
 
 install:
 	mamba env create -f environment.yml || mamba env update -f environment.yml
@@ -17,6 +17,6 @@ test:
 style:
 	$(CONDA_ACTIVATE) $(NAME)
 	black --line-length=140 .
-	flake8 --max-line-length=140 .
+	flake8 --max-line-length=140 . --per-file-ignores="__init__.py:F401"
 	isort .
 

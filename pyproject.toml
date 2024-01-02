@@ -1,16 +1,28 @@
 [project]
-name = "pyparse"
+name = "dd_pyparse"
 version = "0.0.1"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
+    "compressed-rtf",
+    "ijson",
     "loguru",
+    "msg-parser",
     "numpy",
+    "opencv-python",
+    "pdfminer.six",
     "pillow",
-    "spyder",
+    "pillow-avif-plugin",
+    "pillow-heif",
     "python-magic",
     "pydantic",
     "pydantic-settings",
+    "python-docx",
+    "python-iso639",
+    "python-pptx",
+    "py7zr",
+    "rarfile",
+    "tabulate",
 ]
 
 [project.optional-dependencies]
@@ -21,4 +33,4 @@ api = ["uvicorn", "gunicorn", "python-multipart", "aiohttp", "fastapi"]
 package-dir = {"" = "src"}
 
 [project.scripts]
-api = "pyparse.api:main"
+api = "dd_pyparse.interfaces._fastapi:main"
