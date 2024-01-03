@@ -78,7 +78,7 @@ class PDFImageHandler:
         if self.extract_children:
             assert out_dir is not None, "Must provide an output directory if extract_children is True"
             self.out_dir = out_dir
-            self.out_dir.mkdir(exist_ok=True)
+            self.out_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Extracting images to {self.out_dir}")
 
     def handle_image(self, image: LTImage) -> ImageSchema:

@@ -4,7 +4,7 @@ from pathlib import Path
 from loguru import logger
 
 
-def convert_with_libre(file_path: Path, tmp_dir: Path, target_format: str):
+def convert_with_libre(file_path: Path, tmp_dir: Path, target_format: str, timeout: int = 10):
     """Convert a file to a target format using libreoffice
 
     Note: This is meant to be used as a fallback against temp files or
@@ -12,7 +12,7 @@ def convert_with_libre(file_path: Path, tmp_dir: Path, target_format: str):
     anywhere other than the /tmp directory and it is slow.
     """
     out_path = Path(tmp_dir) / f"{file_path.stem}.{target_format}"
-    logger.debug(f"Converting {file_path.stem} to {target_format=} at: {out_path}")
+    logger.debug(f"Converting {file_path} to {target_format=} at: {out_path}")
     command = [
         "soffice",
         "--headless",
@@ -24,7 +24,7 @@ def convert_with_libre(file_path: Path, tmp_dir: Path, target_format: str):
     ]
     try:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        _, stderr = process.communicate()
+        _, stderr = process.communicate(timeout=timeout)
     except FileNotFoundError:
         raise FileNotFoundError("LibreOffice is not installed")
 

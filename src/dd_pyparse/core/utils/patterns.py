@@ -2,7 +2,6 @@ import re
 
 EMAIL_HEADER_PATTERN = r"(MIME-Version: 1.0(.*)?\n)?Date:.*\nMessage-ID:.*\nSubject:.*\nFrom:.*\nTo:.*"
 EMAIL_HEADER_RE = re.compile(EMAIL_HEADER_PATTERN)
-LIST_OF_DICTS_PATTERN = r"\A\s*\[\s*{?"
 UNICODE_BULLETS = [
     "\u0095",
     "\u2022",

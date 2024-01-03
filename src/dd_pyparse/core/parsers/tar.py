@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from pathlib import Path
 from tarfile import TarFile, TarInfo
@@ -14,15 +13,15 @@ class TarParser(FileStreamer):
         """Standardize the file meta"""
         info = info.get_info()
         date_modified = info.get("mtime")
-        file_sub_path = info.get("name")
-        file_name = os.path.basename(file_sub_path)
+        file_sub_path = Path(info.get("name"))
+        file_name = file_sub_path.name if file_sub_path else None
 
         return {
             "date_modified": datetime.fromtimestamp(date_modified) if date_modified else None,
-            "file_extension": Path(file_name).suffix if file_name else None,
-            "file_name": os.path.basename(file_sub_path) if file_sub_path else None,
+            "file_extension": Path(file_name).suffix,
+            "file_name": file_name,
             "file_size": info.get("size"),
-            "file_uri": file_sub_path,
+            "file_uri": str(file_sub_path),
         }
 
     @staticmethod

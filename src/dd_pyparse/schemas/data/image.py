@@ -8,8 +8,8 @@ from dd_pyparse.schemas.enums import DataType
 
 class Image(File):
     data_type: Literal["image"] = Field(DataType.image)
-    width: conint(gt=0) = Field(..., example=640, description="Width of the image")
-    height: conint(gt=0) = Field(..., example=640, description="Height of the image")
+    width: Optional[conint(gt=0)] = Field(None, example=640, description="Width of the image")
+    height: Optional[conint(gt=0)] = Field(None, example=640, description="Height of the image")
     exif: Optional[dict[str, Any]] = Field(
         None,
         example={

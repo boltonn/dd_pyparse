@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Iterator
@@ -13,8 +12,8 @@ class RarParser(FileStreamer):
     @staticmethod
     def standardize_file_meta(info: RarInfo):
         """Standardize the file meta"""
-        file_sub_path = info.filename
-        file_name = os.path.basename(file_sub_path)
+        file_sub_path = Path(info.filename)
+        file_name = file_sub_path.name if file_sub_path else None
         date_modified = datetime.fromtimestamp(info.mtime) if info.mtime else None
         date_modified_os = datetime(*info.date_time) if info.date_time else None
         date_created = datetime.fromtimestamp(info.ctime) if info.ctime else None
@@ -25,7 +24,7 @@ class RarParser(FileStreamer):
             "file_extension": Path(file_name).suffix,
             "file_name": file_name,
             "file_size": info.file_size,
-            "file_uri": file_sub_path,
+            "file_uri": str(file_sub_path),
             # "system_os": info.file_host_os,
         }
 

@@ -1,4 +1,3 @@
-import os
 import subprocess
 from pathlib import Path
 from typing import Iterator
@@ -20,8 +19,8 @@ class SevenZipParser(FileStreamer):
         date_created = date_created.as_datetime() if date_created else None
         date_modified = info.get("lastwrittentime")
         date_modified = date_modified.as_datetime() if date_modified else None
-        file_sub_path = info.get("filename")
-        file_name = os.path.basename(file_sub_path)
+        file_sub_path = Path(info.get("filename"))
+        file_name = file_sub_path.name if file_sub_path else None
 
         return {
             "date_created": date_created,
@@ -29,7 +28,7 @@ class SevenZipParser(FileStreamer):
             "file_extension": Path(file_name).suffix,
             "file_name": file_name,
             "file_size": info.get("uncompressed"),
-            "file_uri": file_sub_path,
+            "file_uri": str(file_sub_path),
         }
 
     @staticmethod

@@ -1,5 +1,3 @@
-import os
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -15,15 +13,15 @@ class ZipParser(FileStreamer):
     def standardize_file_meta(info: ZipInfo):
         """Standardize the file meta"""
         date_modified = info.date_time
-        file_sub_path = info.filename
-        file_name = os.path.basename(file_sub_path) if file_sub_path else None
+        file_sub_path = Path(info.filename)
+        file_name = file_sub_path.name if file_sub_path else None
 
         return {
             "date_modified": datetime(*date_modified) if date_modified else None,
             "file_extension": Path(file_name).suffix if file_name else None,
             "file_name": file_name,
             "file_size": info.file_size,
-            "file_uri": file_sub_path,
+            "file_uri": str(file_sub_path),
         }
 
     @staticmethod
@@ -42,28 +40,18 @@ class ZipParser(FileStreamer):
             archive.extract(info, path=out_dir, pwd=password)
             child["absolute_path"] = out_path.absolute()
         return File(**child)
-
+    
     @staticmethod
     def stream(
         file_path: Path | BytesIO,
         extract_children: bool = False,
-        num_threads: int = 4,
         out_dir: Path = None,
         **kwargs,
     ) -> Iterator[File]:
         """Stream a zip file"""
         # create  an extract function with set parameters
         with ZipFile(file_path, mode="r") as archive:
-            with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                futures = [
-                    executor.submit(
-                        lambda info: ZipParser.extract(info, archive=archive, extract_children=extract_children, out_dir=out_dir, **kwargs),
-                        info,
-                    )
-                    for info in archive.infolist()
-                    if info.is_dir() is False
-                ]
-        for future in futures:
-            child = future.result()
-            if child.absolute_path.is_file():
-                yield child
+            for info in archive.infolist():
+                child = ZipParser.extract(info, archive=archive, extract_children=extract_children, out_dir=out_dir, **kwargs)
+                if child.absolute_path.is_file():
+                    yield child

@@ -46,11 +46,12 @@ class EmailParser(FileParser):
         try:
             return content.decode(charset, errors="ignore")
         except LookupError:
-            encoding = chardet.detect(content).get("encoding")
-            if encoding:
-                return content.decode(encoding, errors="ignore")
+            detected_encoding = chardet.detect(content).get("encoding")
+            if detected_encoding:
+                logger.debug(f"Using ddetected encoding {detected_encoding=}")
+                return content.decode(detected_encoding, errors="ignore")
             else:
-                logger.warning("Unable to detect encoding")
+                logger.warning("Unable to detect encoding so falling back to ignore errors w/ utf-8")
                 return content.decode(encoding, errors="ignore")
         except AttributeError:
             logger.warning("Unable to decode content")
@@ -142,9 +143,11 @@ class EmailParser(FileParser):
     def get_part_filename(part: Message) -> str:
         """Get the filename of a MIME part"""
         file_name = part.get_filename()
-        temp = decode_header(file_name)
-        if temp[0][1] is None:
-            return temp[0][0].decode(temp[0][1])
+        if file_name:
+            temp = decode_header(file_name)
+            logger.debug(f"{temp=}")
+            if temp[0][1] is not None:
+                return temp[0][0].decode(temp[0][1])
 
     @staticmethod
     def get_filename_from_content_type(content_type: str) -> str:
@@ -160,6 +163,11 @@ class EmailParser(FileParser):
         """Parse an attachment"""
         meta = EmailParser.parse_mime_header_meta(content_disposition)
         payload = part.get_payload(decode=True)
+        
+        if payload is None:
+            logger.warning(f"Empty payload for {meta=}")
+            return None
+        
         meta |= get_file_meta(payload)
 
         # a series of ways to find the filename
@@ -225,12 +233,13 @@ class EmailParser(FileParser):
         for key in ["from", "to", "cc", "bcc"]:
             addresses = [e.address for e in EmailParser.get_mail_addresses(msg, key)]
 
-            if key == "from":
+            if key == "from" and addresses:
                 # per RFC 2822, the "From" field is a single address but someone can send on behalf of someone else
                 out["sender"] = addresses[0]
             else:
                 recipients.update(set(addresses))
-        out["recipients"] = list(recipients)
+        if recipients:
+            out["recipients"] = list(recipients)
 
         date_sent = header.pop("date", None)
         if date_sent is not None:
@@ -284,7 +293,8 @@ class EmailParser(FileParser):
                         extract_children=extract_children,
                         out_dir=out_dir,
                     )
-                    attachments.append(meta)
+                    if meta:
+                        attachments.append(meta)
 
             elif content_type == "text/plain":
                 try:

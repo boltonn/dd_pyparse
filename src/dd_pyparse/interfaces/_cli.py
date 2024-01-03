@@ -45,13 +45,14 @@ class Processor:
 
     def _handle_child(self, child: Type[Base]):
         if isinstance(child, File):
-            logger.debug(f"Putting file {child.absolute_path} in queue")
+            logger.info(f"Putting file {child.absolute_path} in queue")
             self.queue.put(child)
         else:
             logger.debug(f"Writing {child}")
             self.write(child)
 
     def _process(self, file: Type[File]):
+        logger.info(f"Processing {file.absolute_path}")
         out = get_file_meta(file.absolute_path)
         file_type = out.get("file_type")
         
@@ -98,7 +99,8 @@ class Processor:
                 self._process(file)
             except Exception as e:
                 logger.error(f"Error processing {file.absolute_path}: {e}")
-            self.queue.task_done()
+            finally:
+                self.queue.task_done()
 
     def run(self):
         """Run the processor"""
@@ -120,7 +122,6 @@ class Processor:
 
     def write(self, data: Type[File]):
         """Write a file to the filesystem"""
-
         out_path = self.out_dir / f"{data.id}.json"
         with open(out_path, "w") as fb:
             out = data.model_dump_json(exclude_none=True, by_alias=True, indent=4)

@@ -6,9 +6,9 @@ import magic
 from loguru import logger
 
 from dd_pyparse.core.utils.general import get_n_from_file
-from dd_pyparse.core.utils.patterns import (EMAIL_HEADER_RE,
-                                            LIST_OF_DICTS_PATTERN)
+from dd_pyparse.core.utils.patterns import EMAIL_HEADER_RE
 from dd_pyparse.schemas.enums import FileType
+
 
 # map of mime types to file types and extensions
 MIME_TYPE_MAP: dict[str, (FileType, str)] = {
@@ -34,6 +34,10 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation": (
         FileType.pptx,
         ".pptx",
+    ),
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow": (
+        FileType.ppt,
+        ".pps",
     ),
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (
         FileType.docx,
@@ -126,10 +130,14 @@ def is_mbox(file: IO) -> bool:
 
 
 def is_text_json(file: IO) -> bool:
-    """Check if a file of filetpye text/plain is json"""
-    file_content = get_n_from_file(file, 4096)
-    file_text = file_content if isinstance(file_content, str) else file_content.decode(errors="ignore")
-    return re.match(LIST_OF_DICTS_PATTERN, file_text) is not None
+    """Check if a file of filetype text/plain is json"""
+    first_char = get_n_from_file(file, 1)
+    try:
+        last_char = get_n_from_file(file, -1)
+    except OSError:
+        return False
+
+    return first_char == b"{" and last_char == b"}" or first_char == b"[" and last_char == b"]"
 
 
 def is_buffer_email(file: IO) -> bool:
@@ -202,6 +210,7 @@ def route_mime_type(
 
         else:
             file_type, _ = MIME_TYPE_MAP.get(mime_type, (None, None))
+            #overwrites
             if file_type == FileType.docx:
                 if file_ext == ".docm":
                     file_type = FileType.doc
@@ -213,10 +222,14 @@ def route_mime_type(
                     file_type = FileType.doc
                     mime_type = "application/vnd.oasis.opendocument.text"
 
-    if file_type is None:
-        if file_ext is not None:
-            logger.debug(f"Using file extension {file_ext} to identify mime type")
-            file_type, mime_type = EXT_TO_FILETYPE_MIME_MAP.get(file_ext, (None, None))
+            if file_type == FileType.pptx:
+                if file_ext == ".pps":
+                    file_type = FileType.ppt
+                    mime_type = "application/vnd.openxmlformats-officedocument.presentationml.slideshow"
+
+    if file_type is None and file_ext is not None:
+        logger.info(f"Using file extension {file_ext} to identify mime type")
+        file_type, mime_type = EXT_TO_FILETYPE_MIME_MAP.get(file_ext, (None, None))
         
     if file_type is None:
         file_type = FileType.unknown

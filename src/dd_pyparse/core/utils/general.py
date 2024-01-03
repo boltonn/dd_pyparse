@@ -69,9 +69,14 @@ def get_leading_character(buffer: bytes, encoding: str = "utf-8") -> str:
 
 def get_n_from_file(file: IO, n: int) -> bytes:
     """Get the first n bytes from a file"""
-    file.seek(0)
-    file_bytes = file.read(n)
-    file.seek(0)
+    if n>=0:
+        file.seek(0)
+        file_bytes = file.read(n)
+        file.seek(0)
+    else:
+        file.seek(n, os.SEEK_END)
+        file_bytes = file.read()
+        file.seek(0)
     return file_bytes
 
 
@@ -87,5 +92,5 @@ def safe_open(file_path: Path, mode: Literal["w", "wb"]):
     """A utility function to create parent directories if they don't exist"""
     if not file_path.parent.exists():
         logger.debug(f"Creating parent directories for {file_path}")
-        file_path.parent.mkdir(parents=True)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
     return open(file_path, mode)

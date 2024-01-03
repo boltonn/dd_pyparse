@@ -84,13 +84,21 @@ class PptxParser(FileParser):
         child = get_file_meta(shape.image.blob)
         child["file_name"] = file_name
         child["file_extension"] = file_ext
+
+        if file_ext.lower() == ".wmf":
+            child["mime_type"] = "image/wmf"
+            child["file_type"] = "image"
         
         try:
             child |= ImageParser.parse(file=shape.image.blob)
         except UnidentifiedImageError:
             logger.warning(f"Failed to parse image {file_name}")
+        except OSError:
+            logger.warning(f"Failed to parse image {file_name}. Likely wmf image that cannot be parsed on Linux.")
 
-        if extract_children and all(dim > min_resolution for dim in [child["height"], child["width"]]):
+        above_min_resolution = all(dim > min_resolution for dim in [child["height"], child["width"]]) if hasattr(child, "height") and hasattr(child, "width") else True
+
+        if extract_children and above_min_resolution and out_dir is not None:
             out_name = f"{child['hash']['md5']}{child.get('file_extension', '.bin')}"
             out_path = out_dir / out_name
             with safe_open(out_path, "wb") as fb:
@@ -137,7 +145,7 @@ class PptxParser(FileParser):
             raise TypeError(f"Cannot parse {type(file)}")
 
         presentation = pptx.Presentation(file)
-        return {
+        out |= {
             **parse_meta(presentation),
             **PptxParser.parse_children(
                 presentation=presentation,
@@ -149,3 +157,4 @@ class PptxParser(FileParser):
                 page_delimiter=page_delimiter,
             ),
         }
+        return out
