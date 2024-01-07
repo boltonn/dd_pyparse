@@ -26,12 +26,13 @@ from dd_pyparse.core.parsers.xls import XlsParser
 from dd_pyparse.core.parsers.xlsx import XlsxParser
 from dd_pyparse.core.parsers.xml import XmlParser
 from dd_pyparse.core.parsers.zip import ZipParser
-from dd_pyparse.schemas.data import Archive, Document, Email, Image, Video
+from dd_pyparse.schemas.data import Archive, Code, Document, Email, Image, Log, Table, Video
 from dd_pyparse.schemas.enums import DataType, FileType
 from dd_pyparse.utils.exceptions import UnsupportedFileType
 
 PARSER_REGISTRY = {
-    FileType.csv: (CsvParser, Document),
+    FileType.code: (TxtParser, Code),
+    FileType.csv: (CsvParser, Table),
     FileType.doc: (DocParser, Document),
     FileType.docx: (DocxParser, Document),
     FileType.eml: (EmailParser, Email),
@@ -39,6 +40,7 @@ PARSER_REGISTRY = {
     FileType.html: (HtmlParser, Document),
     FileType.image: (ImageParser, Image),
     FileType.json: (JsonParser, Document),
+    FileType.log: (TxtParser, Log),
     FileType.mbox: (MboxParser, Archive),
     FileType.msg: (MsgParser, Email),
     FileType.pdf: (PdfParser, Document),
@@ -50,8 +52,8 @@ PARSER_REGISTRY = {
     FileType.tsv: (TsvParser, Document),
     FileType.txt: (TxtParser, Document),
     FileType.video: (VideoParser, Video),
-    FileType.xls: (XlsParser, Document),
-    FileType.xlsx: (XlsxParser, Document),
+    FileType.xls: (XlsParser, Table),
+    FileType.xlsx: (XlsxParser, Table),
     FileType.xml: (XmlParser, Document),
     FileType.zip: (ZipParser, Archive),
 }

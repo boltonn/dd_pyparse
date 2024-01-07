@@ -1,5 +1,4 @@
 import mimetypes
-import re
 from typing import IO, Optional
 
 import magic
@@ -10,7 +9,7 @@ from dd_pyparse.core.utils.patterns import EMAIL_HEADER_RE
 from dd_pyparse.schemas.enums import FileType
 
 
-# map of mime types to file types and extensions
+# map of mime types to file types and most common extension
 MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "application/csv": (FileType.csv, ".csv"),
     "application/gzip": (FileType.gzip, ".gz"),
@@ -27,22 +26,10 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "application/vnd.ms-word.document.macroEnabled.main+xml": (FileType.doc, ".docm"),
     "application/vnd.ms-word.template.macroEnabledTemplate.main+xml": (FileType.doc, ".dotm"),
     "application/vnd.oasis.opendocument.text": (FileType.doc, ".odt"),
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": (
-        FileType.xlsx,
-        ".xlsx",
-    ),
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation": (
-        FileType.pptx,
-        ".pptx",
-    ),
-    "application/vnd.openxmlformats-officedocument.presentationml.slideshow": (
-        FileType.ppt,
-        ".pps",
-    ),
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (
-        FileType.docx,
-        ".docx",
-    ),
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": (FileType.xlsx, ".xlsx"),
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": (FileType.pptx, ".pptx"),
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow": (FileType.ppt, ".pps"),
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (FileType.docx, ".docx"),
     "application/x-7z-compressed": (FileType.zip, ".zip"),
     "application/x-bzip2": (FileType.bz2, ".bz2"),
     "application/x-csv": (FileType.csv, ".csv"),
@@ -80,24 +67,59 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "text/html": (FileType.html, ".html"),
     "text/markdown": (FileType.txt, ".md"),
     "text/plain": (FileType.txt, ".txt"),
-    # "text/richtext": (FileType.txt, ".rtf"),
+    "text/richtext": (FileType.doc, ".rtf"),
     "text/tab-separated-values": (FileType.tsv, ".tsv"),
     "text/xml": (FileType.xml, ".xml"),
     "text/x-7z-compressed": (FileType.zip, ".zip"),
-    "text/x-comma-separated-values": (FileType.csv, ".csv"),
+    "text/x-bzip2": (FileType.bz2, ".bz2"),
     "text/x-c": (FileType.txt, ".c"),
+    "text/x-c++": (FileType.txt, ".cpp"),
+    "text/x-c++src": (FileType.txt, ".cpp"),
+    "text/x-clojure": (FileType.txt, ".clj"),
+    "text/x-coffeescript": (FileType.txt, ".coffee"),
+    "text/x-common-lisp": (FileType.txt, ".lisp"),
+    "text/x-comma-separated-values": (FileType.csv, ".csv"),
+    "text/x-csharp": (FileType.txt, ".cs"),
+    "text/x-csrc": (FileType.txt, ".c"),
     "text/x-csv": (FileType.csv, ".csv"),
+    "text/x-dart": (FileType.txt, ".dart"),
+    "text/x-erlang": (FileType.txt, ".erl"),
+    "text/x-fortran": (FileType.txt, ".f"),
+    "text/x-go": (FileType.txt, ".go"),
+    "text/x-haskell": (FileType.txt, ".hs"),
+    "text/x-haxe": (FileType.txt, ".hx"),
+    "text/x-java": (FileType.txt, ".java"),
+    "text/x-javascript": (FileType.txt, ".js"),
+    "text/x-julia": (FileType.txt, ".jl"),
+    "text/x-kotlin": (FileType.txt, ".kt"),
+    "text/x-lua": (FileType.txt, ".lua"),
     "text/x-markdown": (FileType.txt, ".md"),
+    "text/x-matlab": (FileType.txt, ".m"),
     "text/x-msdos-batch": (FileType.txt, ".bat"),
+    "text/x-nim": (FileType.txt, ".nim"),
+    "text/x-objectivec": (FileType.txt, ".m"),
+    "text/x-ocaml": (FileType.txt, ".ml"),
+    "text/x-pascal": (FileType.txt, ".pas"),
     "text/x-perl": (FileType.txt, ".pl"),
+    "text/x-php": (FileType.txt, ".php"),
+    "text/x-powershell": (FileType.txt, ".ps1"),
+    "text/x-prolog": (FileType.txt, ".pro"),
     "text/x-python": (FileType.txt, ".py"),
     "text/x-rar": (FileType.rar, ".rar"),
+    "text/x-r": (FileType.txt, ".r"),
     "text/x-ruby": (FileType.txt, ".rb"),
     "text/x-rst": (FileType.txt, ".rst"),
-    "text/x-tar": (FileType.tar, ".tar"),
+    "text/x-rustsrc": (FileType.txt, ".rs"),
+    "text/x-scala": (FileType.txt, ".scala"),
+    "text/x-scheme": (FileType.txt, ".scm"),
     "text/x-shellscript": (FileType.txt, ".sh"),
     "text/x-sql": (FileType.txt, ".sql"),
+    "text/x-swift": (FileType.txt, ".swift"),
+    "text/x-tar": (FileType.tar, ".tar"),
+    "text/x-typescript": (FileType.txt, ".ts"),
+    "text/x-vbnet": (FileType.txt, ".vb"),
     # "text/x-vcard": (FileType.vcf, ".vcf"),
+    "text/x-yaml": (FileType.txt, ".yaml"),
     "text/x-zip": (FileType.zip, ".zip"),
 }
 
@@ -105,7 +127,7 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
 ADDITIONAL_EXTENSIONS = {
     ".jpf": (FileType.image, "image/x-jpf"),
     ".java": (FileType.txt, "text/plain"),
-    ".log": (FileType.txt, "text/plain"),
+    ".log": (FileType.log, "text/plain"),
     ".tab": (FileType.tsv, "text/tab-separated-values"),
     ".vb": (FileType.txt, "text/plain"),
 }
