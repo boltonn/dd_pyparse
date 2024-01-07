@@ -13,13 +13,14 @@ from dd_pyparse.schemas.enums import FileType
 MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "application/csv": (FileType.csv, ".csv"),
     "application/gzip": (FileType.gzip, ".gz"),
-    "application/javascript": (FileType.txt, ".js"),
+    "application/javascript": (FileType.code, ".js"),
     "application/json": (FileType.json, ".json"),
     "application/mbox": (FileType.mbox, ".mbox"),
     "application/msword": (FileType.doc, ".doc"),
     "application/pdf": (FileType.pdf, ".pdf"),
-    "application/sql": (FileType.txt, ".sql"),
+    "application/sql": (FileType.code, ".sql"),
     "application/tar+gzip": (FileType.tar, ".tar.gz"),
+    "application/vnd.apple.keynote": (FileType.ppt, ".key"),
     "application/vnd.ms-excel": (FileType.xls, ".xls"),
     "application/vnd.ms-outlook": (FileType.msg, ".msg"),
     "application/vnd.ms-powerpoint": (FileType.ppt, ".ppt"),
@@ -34,7 +35,7 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "application/x-bzip2": (FileType.bz2, ".bz2"),
     "application/x-csv": (FileType.csv, ".csv"),
     "application/x-gzip": (FileType.gzip, ".gz"),
-    "application/x-httpd-php": (FileType.txt, ".php"),
+    "application/x-httpd-php": (FileType.code, ".php"),
     "application/x-ole-storage": (FileType.msg, ".msg"),
     "application/x-rar-compressed": (FileType.rar, ".rar"),
     "application/x-tar": (FileType.tar, ".tar"),
@@ -72,52 +73,52 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "text/xml": (FileType.xml, ".xml"),
     "text/x-7z-compressed": (FileType.zip, ".zip"),
     "text/x-bzip2": (FileType.bz2, ".bz2"),
-    "text/x-c": (FileType.txt, ".c"),
-    "text/x-c++": (FileType.txt, ".cpp"),
-    "text/x-c++src": (FileType.txt, ".cpp"),
-    "text/x-clojure": (FileType.txt, ".clj"),
-    "text/x-coffeescript": (FileType.txt, ".coffee"),
-    "text/x-common-lisp": (FileType.txt, ".lisp"),
+    "text/x-c": (FileType.code, ".c"),
+    "text/x-c++": (FileType.code, ".cpp"),
+    "text/x-c++src": (FileType.code, ".cpp"),
+    "text/x-clojure": (FileType.code, ".clj"),
+    "text/x-coffeescript": (FileType.code, ".coffee"),
+    "text/x-common-lisp": (FileType.code, ".lisp"),
     "text/x-comma-separated-values": (FileType.csv, ".csv"),
-    "text/x-csharp": (FileType.txt, ".cs"),
-    "text/x-csrc": (FileType.txt, ".c"),
+    "text/x-csharp": (FileType.code, ".cs"),
+    "text/x-csrc": (FileType.code, ".c"),
     "text/x-csv": (FileType.csv, ".csv"),
-    "text/x-dart": (FileType.txt, ".dart"),
-    "text/x-erlang": (FileType.txt, ".erl"),
-    "text/x-fortran": (FileType.txt, ".f"),
-    "text/x-go": (FileType.txt, ".go"),
-    "text/x-haskell": (FileType.txt, ".hs"),
-    "text/x-haxe": (FileType.txt, ".hx"),
-    "text/x-java": (FileType.txt, ".java"),
-    "text/x-javascript": (FileType.txt, ".js"),
-    "text/x-julia": (FileType.txt, ".jl"),
-    "text/x-kotlin": (FileType.txt, ".kt"),
-    "text/x-lua": (FileType.txt, ".lua"),
-    "text/x-markdown": (FileType.txt, ".md"),
-    "text/x-matlab": (FileType.txt, ".m"),
-    "text/x-msdos-batch": (FileType.txt, ".bat"),
-    "text/x-nim": (FileType.txt, ".nim"),
-    "text/x-objectivec": (FileType.txt, ".m"),
-    "text/x-ocaml": (FileType.txt, ".ml"),
-    "text/x-pascal": (FileType.txt, ".pas"),
-    "text/x-perl": (FileType.txt, ".pl"),
-    "text/x-php": (FileType.txt, ".php"),
-    "text/x-powershell": (FileType.txt, ".ps1"),
-    "text/x-prolog": (FileType.txt, ".pro"),
-    "text/x-python": (FileType.txt, ".py"),
+    "text/x-dart": (FileType.code, ".dart"),
+    "text/x-erlang": (FileType.code, ".erl"),
+    "text/x-fortran": (FileType.code, ".f"),
+    "text/x-go": (FileType.code, ".go"),
+    "text/x-haskell": (FileType.code, ".hs"),
+    "text/x-haxe": (FileType.code, ".hx"),
+    "text/x-java": (FileType.code, ".java"),
+    "text/x-javascript": (FileType.code, ".js"),
+    "text/x-julia": (FileType.code, ".jl"),
+    "text/x-kotlin": (FileType.code, ".kt"),
+    "text/x-lua": (FileType.code, ".lua"),
+    "text/x-markdown": (FileType.code, ".md"),
+    "text/x-matlab": (FileType.code, ".m"),
+    "text/x-msdos-batch": (FileType.code, ".bat"),
+    "text/x-nim": (FileType.code, ".nim"),
+    "text/x-objectivec": (FileType.code, ".m"),
+    "text/x-ocaml": (FileType.code, ".ml"),
+    "text/x-pascal": (FileType.code, ".pas"),
+    "text/x-perl": (FileType.code, ".pl"),
+    "text/x-php": (FileType.code, ".php"),
+    "text/x-powershell": (FileType.code, ".ps1"),
+    "text/x-prolog": (FileType.code, ".pro"),
+    "text/x-python": (FileType.code, ".py"),
     "text/x-rar": (FileType.rar, ".rar"),
-    "text/x-r": (FileType.txt, ".r"),
-    "text/x-ruby": (FileType.txt, ".rb"),
+    "text/x-r": (FileType.code, ".r"),
+    "text/x-ruby": (FileType.code, ".rb"),
     "text/x-rst": (FileType.txt, ".rst"),
-    "text/x-rustsrc": (FileType.txt, ".rs"),
-    "text/x-scala": (FileType.txt, ".scala"),
-    "text/x-scheme": (FileType.txt, ".scm"),
-    "text/x-shellscript": (FileType.txt, ".sh"),
-    "text/x-sql": (FileType.txt, ".sql"),
-    "text/x-swift": (FileType.txt, ".swift"),
+    "text/x-rustsrc": (FileType.code, ".rs"),
+    "text/x-scala": (FileType.code, ".scala"),
+    "text/x-scheme": (FileType.code, ".scm"),
+    "text/x-shellscript": (FileType.code, ".sh"),
+    "text/x-sql": (FileType.code, ".sql"),
+    "text/x-swift": (FileType.code, ".swift"),
     "text/x-tar": (FileType.tar, ".tar"),
-    "text/x-typescript": (FileType.txt, ".ts"),
-    "text/x-vbnet": (FileType.txt, ".vb"),
+    "text/x-typescript": (FileType.code, ".ts"),
+    "text/x-vbnet": (FileType.code, ".vb"),
     # "text/x-vcard": (FileType.vcf, ".vcf"),
     "text/x-yaml": (FileType.txt, ".yaml"),
     "text/x-zip": (FileType.zip, ".zip"),
@@ -127,7 +128,10 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
 ADDITIONAL_EXTENSIONS = {
     ".jpf": (FileType.image, "image/x-jpf"),
     ".java": (FileType.txt, "text/plain"),
+    ".kth": (FileType.ppt, "application/vnd.apple.keynote"),
     ".log": (FileType.log, "text/plain"),
+    ".pot": (FileType.ppt, "application/vnd.ms-powerpoint"),
+    ".pps": (FileType.ppt, "application/vnd.ms-powerpoint"),
     ".tab": (FileType.tsv, "text/tab-separated-values"),
     ".vb": (FileType.txt, "text/plain"),
 }
@@ -219,12 +223,16 @@ def route_mime_type(
             file_type = FileType.html if file_ext and (file_ext in [".html", ".htm"]) else FileType.xml
 
         elif mime_type == "text/plain":
+            # magic overwrites for text files
             if is_mbox(file=file):
                 file_type = FileType.mbox
+                mime_type = "application/mbox"
             elif is_buffer_email(file=file):
                 file_type = FileType.email
+                mime_type = "message/rfc822"
             elif is_text_json(file=file):
                 file_type = FileType.json
+                mime_type = "application/json"
             elif file_ext and file_ext in EXT_TO_FILETYPE_MIME_MAP:
                 file_type, mime_type = EXT_TO_FILETYPE_MIME_MAP[file_ext]
             else:
@@ -232,7 +240,7 @@ def route_mime_type(
 
         else:
             file_type, _ = MIME_TYPE_MAP.get(mime_type, (None, None))
-            #overwrites
+            # magic overwrites for documents and presentations
             if file_type == FileType.docx:
                 if file_ext == ".docm":
                     file_type = FileType.doc
@@ -248,6 +256,18 @@ def route_mime_type(
                 if file_ext == ".pps":
                     file_type = FileType.ppt
                     mime_type = "application/vnd.openxmlformats-officedocument.presentationml.slideshow"
+                elif file_ext == ".ppt":
+                    file_type = FileType.ppt
+                    mime_type = "application/vnd.ms-powerpoint"
+                elif file_ext == ".odp":
+                    file_type = FileType.ppt
+                    mime_type = "application/vnd.oasis.opendocument.presentation"
+                elif file_ext == ".pot":
+                    file_type = FileType.ppt
+                    mime_type = "application/vnd.ms-powerpoint"
+                elif file_ext in [".key", ".kth"]:
+                    file_type = FileType.ppt
+                    mime_type = "application/vnd.apple.keynote"
 
     if file_type is None and file_ext is not None:
         logger.info(f"Using file extension {file_ext} to identify mime type")

@@ -2,11 +2,12 @@ from typing import Literal, Optional
 
 from pydantic import Field, field_validator
 
+from dd_pyparse.schemas.data.parents.file import File
 from dd_pyparse.schemas.data.parents.message import Message
 from dd_pyparse.schemas.enums import DataType
 
 
-class Email(Message):
+class Email(File, Message):
     data_type: Literal["email"] = Field(DataType.email)
     subject: Optional[str] = Field(None, description="Email subject")
     header: Optional[dict[str, str]] = Field(None, description="Email header to include raw from, to, cc, bcc")

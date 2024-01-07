@@ -317,7 +317,7 @@ class EmailParser(FileParser):
                 text = clean(text)
             out["text"] = {"source": text}
         if attachments:
-            out["attachments"] = attachments
+            out["children"] = attachments
 
         return out
 

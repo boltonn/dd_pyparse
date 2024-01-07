@@ -35,16 +35,16 @@ class Processor:
         self.queue = JoinableQueue()
 
     def _get_files(self):
-        n = 0
+        num_files = 0
         logger.info(f"Searching for files in {self.in_dir}")
         for file_path in self.in_dir.rglob(self.pattern):
             if file_path.is_file():
                 self.queue.put(File(absolute_path=str(file_path)))
-                n += 1
-        logger.info(f"Found {n} files")
+                num_files += 1
+        logger.info(f"Found {num_files} files")
 
     def _handle_child(self, child: Type[Base]):
-        if isinstance(child, File):
+        if child.__repr_name__() == "File":
             logger.info(f"Putting file {child.absolute_path} in queue")
             self.queue.put(child)
         else:
@@ -56,14 +56,14 @@ class Processor:
         out = get_file_meta(file.absolute_path)
         file_type = out.get("file_type")
         
-        if file_type in [FileType.unknown, FileType.other]:
+        if file_type in [FileType.unknown]:
             logger.warning(f"Could not determine file type for {file.absolute_path=}, {file_type=}")
             # keep reference to file
             self.write(File(**out))
             return
         
         parser, validator = route_parser(file_type)
-        out_dir = self.children_dir / out["hash"]["md5"]  
+        out_dir = self.children_dir / file.id 
 
         if parser.__base__ == FileParser:
             out |= parser.parse(file=file.absolute_path, extract_children=self.extract_children, out_dir=out_dir, **self.kwargs)
@@ -71,7 +71,8 @@ class Processor:
             out = out | file.model_dump(mode="dict", exclude_none=True)
             out = validator(**out)
             if out.children:
-                map(self._handle_child, out.children)
+                for child in out.children:
+                    self._handle_child(child)
                 del out.children
             self.write(out)
 
@@ -79,7 +80,8 @@ class Processor:
             for child in parser.stream(file_path=file.absolute_path, extract_children=self.extract_children, out_dir=out_dir, **self.kwargs):
                 child.parent_id = file.id
                 if child.children:
-                    map(self._handle_child, child.children)
+                    for child in child.children:
+                        self._handle_child(child)
                     del child.children
                 self._handle_child(child)
 

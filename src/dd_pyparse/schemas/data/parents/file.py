@@ -12,7 +12,7 @@ class File(Base):
     absolute_path: Optional[Path] = Field(None, description="URL of the file for retrieval")
     date_created: Optional[datetime] = Field(None, description="Date and time the data was created on source")
     date_modified: Optional[datetime] = Field(None, description="Date and time the data was modified on source")
-    file_ext: Optional[str] = Field(None, example="jpg", description="File extension of the data")
+    file_extension: Optional[str] = Field(None, example=".jpg", description="File extension of the data")
     file_name: Optional[str] = Field(None, description="Filename of the file at source")
     file_size: Optional[int] = Field(None, example=10000, description="Size in bytes of the data")
     file_type: Optional[FileType] = Field(None, description="Type of file")

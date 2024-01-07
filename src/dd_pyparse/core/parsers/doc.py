@@ -7,6 +7,10 @@ from dd_pyparse.core.utils.externals import convert_with_libre
 
 
 class DocParser(FileParser):
+    """Parse a doc file by converting it to docx and then using the docx parser
+    
+        Supported formats: doc, docm, dot, dotm, odt, rtf
+    """
     @staticmethod
     def parse(
         file: Path | bytes,
@@ -18,8 +22,6 @@ class DocParser(FileParser):
         page_delimiter: str = "",
         **kwargs,
     ) -> dict:
-        """Parse a doc file"""
-
         if isinstance(file, (Path, str)):
             file_path = Path(file)
 

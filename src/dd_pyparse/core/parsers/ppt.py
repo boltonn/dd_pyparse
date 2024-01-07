@@ -7,7 +7,9 @@ from dd_pyparse.core.utils.externals import convert_with_libre
 
 
 class PptParser(FileParser):
-    """Powerpoint file parser"""
+    """Presentation file parser that converts files to pptx and then uses the pptx
+        Supported formats: ppt, pos, pptm, key/kth, odp, pot
+    """
 
     @staticmethod
     def parse(

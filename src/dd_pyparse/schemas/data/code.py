@@ -7,7 +7,7 @@ from dd_pyparse.schemas.enums import DataType, CodingScript
 
 
 def map_language(mime_type: str) -> CodingScript:
-    switcher = {
+    mapper = {
         "text/x-asm": CodingScript.assembly,
         "text/x-awk": CodingScript.awk,
         "text/x-bat": CodingScript.batch,
@@ -56,7 +56,7 @@ def map_language(mime_type: str) -> CodingScript:
         "text/x-shellscript": CodingScript.shell,
         "text/x-sql": CodingScript.sql,
     }
-    return switcher.get(mime_type, None)
+    return mapper.get(mime_type, None)
 
 
 class Code(File):
@@ -66,8 +66,9 @@ class Code(File):
     
     model_config: ConfigDict(use_enum_values=True)
 
-    @computed_field("language")
-    def get_language(self):
+    @computed_field
+    @property
+    def language(self) -> CodingScript|None:
         return map_language(self.mime_type)
 
 

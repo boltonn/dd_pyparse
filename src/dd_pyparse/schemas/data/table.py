@@ -3,10 +3,11 @@ from typing import Literal, Optional
 from pydantic import ConfigDict, Field
 
 from dd_pyparse.schemas.base import Base
+from dd_pyparse.schemas.data.parents.file import File
 from dd_pyparse.schemas.enums import DataType
 
 
-class Table(Base):
+class Table(File):
     """Generic table object"""
 
     data_type: Literal["table"] = Field(DataType.table)
