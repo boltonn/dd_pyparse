@@ -101,6 +101,7 @@ class FileType(StrEnum):
     log = "log"
     mbox = "mbox"
     msg = "msg"
+    ods = "ods"
     pdf = "pdf"
     ppt = "ppt"
     pptx = "pptx"

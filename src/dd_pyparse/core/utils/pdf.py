@@ -15,6 +15,7 @@ from PIL import Image, ImageChops, ImageOps
 from dd_pyparse.core.parsers.base import get_file_meta
 from dd_pyparse.core.parsers.image import ImageParser
 from dd_pyparse.schemas.data import Image as ImageSchema
+from dd_pyparse.schemas.enums import FileType
 
 # TODO: file output should be hash but the have to figure out how to get BMP to work
 
@@ -84,7 +85,7 @@ class PDFImageHandler:
     def handle_image(self, image: LTImage) -> ImageSchema:
         """Save an image to disk"""
         (height, width) = image.srcsize
-        meta = {"height": height, "width": width}
+        meta = {"height": height, "width": width, "file_type": FileType.image}
 
         filters = image.stream.get_filters()
 
@@ -231,7 +232,7 @@ class PDFImageHandler:
             file_path = self.out_dir / file_name
             img.save(file_path, "JPEG")
             logger.info(f"Saved image to {file_path}")
-            meta |= {"file_extension": file_ext, "absolute_path": file_path}
+            meta |= {"file_extension": file_ext, "absolute_path": file_path, "mime_type": "image/jpeg"}
 
         return meta
 

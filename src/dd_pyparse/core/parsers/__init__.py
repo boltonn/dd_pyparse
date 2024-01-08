@@ -13,6 +13,7 @@ from dd_pyparse.core.parsers.image import ImageParser
 from dd_pyparse.core.parsers.json import JsonParser
 from dd_pyparse.core.parsers.mbox import MboxParser
 from dd_pyparse.core.parsers.msg import MsgParser
+from dd_pyparse.core.parsers.ods import OdsParser
 from dd_pyparse.core.parsers.pdf import PdfParser
 from dd_pyparse.core.parsers.ppt import PptParser
 from dd_pyparse.core.parsers.pptx import PptxParser
@@ -43,6 +44,7 @@ PARSER_REGISTRY = {
     FileType.log: (TxtParser, Log),
     FileType.mbox: (MboxParser, Archive),
     FileType.msg: (MsgParser, Email),
+    FileType.ods: (OdsParser, Table),
     FileType.pdf: (PdfParser, Document),
     FileType.ppt: (PptParser, Document),
     FileType.pptx: (PptxParser, Document),

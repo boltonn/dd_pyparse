@@ -26,6 +26,8 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "application/vnd.ms-powerpoint": (FileType.ppt, ".ppt"),
     "application/vnd.ms-word.document.macroEnabled.main+xml": (FileType.doc, ".docm"),
     "application/vnd.ms-word.template.macroEnabledTemplate.main+xml": (FileType.doc, ".dotm"),
+    "application/vnd.oasis.opendocument.presentation": (FileType.ppt, ".odp"),
+    "application/vnd.oasis.opendocument.spreadsheet": (FileType.ods, ".ods"),
     "application/vnd.oasis.opendocument.text": (FileType.doc, ".odt"),
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": (FileType.xlsx, ".xlsx"),
     "application/vnd.openxmlformats-officedocument.presentationml.presentation": (FileType.pptx, ".pptx"),
@@ -93,6 +95,8 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "text/x-javascript": (FileType.code, ".js"),
     "text/x-julia": (FileType.code, ".jl"),
     "text/x-kotlin": (FileType.code, ".kt"),
+    "text/x-latex": (FileType.code, ".tex"),
+    "text/x-lisp": (FileType.code, ".lisp"),
     "text/x-lua": (FileType.code, ".lua"),
     "text/x-markdown": (FileType.code, ".md"),
     "text/x-matlab": (FileType.code, ".m"),
@@ -271,7 +275,7 @@ def route_mime_type(
 
     if file_type is None and file_ext is not None:
         logger.info(f"Using file extension {file_ext} to identify mime type")
-        file_type, mime_type = EXT_TO_FILETYPE_MIME_MAP.get(file_ext, (None, None))
+        file_type, mime_type = EXT_TO_FILETYPE_MIME_MAP.get(file_ext, (file_type, mime_type))
         
     if file_type is None:
         file_type = FileType.unknown
