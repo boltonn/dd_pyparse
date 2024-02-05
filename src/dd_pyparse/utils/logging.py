@@ -36,7 +36,7 @@ class InterceptHandler(logging.Handler):
 def make_logger(
     file_path: Path = None, level: str = "INFO", rotation: str = "1 day", retention: str = "1 week", format: str = DEFAULT_LOG_FORMAT
 ):
-    # logger.remove(0)
+    logger.remove(0)
 
     if file_path is not None:
         logger.add(str(file_path), rotation=rotation, retention=retention, enqueue=True, backtrace=True, level=level.upper(), format=format)

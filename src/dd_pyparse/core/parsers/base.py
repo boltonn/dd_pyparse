@@ -5,14 +5,8 @@ from io import BytesIO
 from pathlib import Path
 
 from dd_pyparse.core.utils.filetype import get_extension, route_mime_type
-from dd_pyparse.core.utils.general import get_buffer_size, get_hashes
+from dd_pyparse.core.utils.general import get_hashes
 from dd_pyparse.schemas.base import Base
-
-try:
-    from starlette.datastructures import UploadFile
-except ImportError:
-    raise ImportError("Please install starlette to use the UploadFile")
-
 
 @singledispatch
 def get_file_meta(file, *args, **kwargs) -> dict:
@@ -57,25 +51,28 @@ def _(file) -> dict:
         "mime_type": mime_type,
     }
 
+try:
+    from starlette.datastructures import UploadFile
+    @get_file_meta.register(UploadFile)
+    def _(file) -> dict:
+        """Get metadata about the file"""
+        mime_type = file.content_type
+        file_name = Path(file.filename).name
+        mime_type, file_type = route_mime_type(file_name=file.filename, file=file.file._file, mime_type=mime_type)
+        file_stat = file.file.stat()
 
-@get_file_meta.register(UploadFile)
-def _(file) -> dict:
-    """Get metadata about the file"""
-    mime_type = file.content_type
-    file_name = Path(file.filename).name
-    mime_type, file_type = route_mime_type(file_name=file.filename, file=file.file._file, mime_type=mime_type)
-    file_stat = file.file.stat()
-
-    return {
-        "date_modified": datetime.fromtimestamp(file_stat.st_mtime),
-        "date_created": datetime.fromtimestamp(file_stat.st_ctime),
-        "hash": get_hashes(file.file._file),
-        "file_extension": get_extension(file_name),
-        "file_name": file_name,
-        "file_size": file_stat.st_size,
-        "file_type": file_type,
-        "mime_type": mime_type,
-    }
+        return {
+            "date_modified": datetime.fromtimestamp(file_stat.st_mtime),
+            "date_created": datetime.fromtimestamp(file_stat.st_ctime),
+            "hash": get_hashes(file.file._file),
+            "file_extension": get_extension(file_name),
+            "file_name": file_name,
+            "file_size": file_stat.st_size,
+            "file_type": file_type,
+            "mime_type": mime_type,
+        }
+except ImportError:
+    pass
 
 
 class FileParser:

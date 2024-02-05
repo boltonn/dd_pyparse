@@ -34,7 +34,7 @@ class HtmlParser(FileParser):
     ):
         """Parse an HTML file"""
         out = TxtParser.parse(file=file, encoding=encoding)
-        text = out["text"]["source"]
+        text = out.get("text", {}).get("source")
         if text is not None:
             if raw is False:
                 text = HtmlParser.parse_str(
@@ -44,5 +44,6 @@ class HtmlParser(FileParser):
                 )
                 if cleaned is True:
                     text = clean(text, extra_whitespace=True, trailing_punctuation=True)
-            out["text"]["source"] = text
+            if text:
+                out["text"] = {"source": text}
         return out

@@ -1,7 +1,9 @@
 import struct
 from io import BytesIO
 from pathlib import Path
-from typing import Literal, Tuple
+import shutil
+import tempfile
+from typing import Literal
 
 from loguru import logger
 from pdfminer.jbig2 import JBIG2StreamReader, JBIG2StreamWriter
@@ -14,6 +16,7 @@ from PIL import Image, ImageChops, ImageOps
 
 from dd_pyparse.core.parsers.base import get_file_meta
 from dd_pyparse.core.parsers.image import ImageParser
+from dd_pyparse.core.utils.general import get_hashes
 from dd_pyparse.schemas.data import Image as ImageSchema
 from dd_pyparse.schemas.enums import FileType
 
@@ -96,7 +99,7 @@ class PDFImageHandler:
         elif self._is_jbig2(image):
             meta = self._parse_jbig2(meta=meta, image=image)
         elif image.bits == 1:
-            meta = self._parse_bmp(meta=meta, image=image, width=width, height=height, bytes_per_line=(width + 7) // 8)
+            meta = self._parse_bmp(meta=meta, image=image, width=width, height=height, bytes_per_line=(width + 7) // 8, bits=1)
         elif image.bits == 8 and LITERAL_DEVICE_RGB in image.colorspace:
             meta = self._parse_bmp(meta=meta, image=image, width=width, height=height, bytes_per_line=width * 3, bits=image.bits * 3)
         elif image.bits == 8 and LITERAL_DEVICE_GRAY in image.colorspace:
@@ -115,7 +118,6 @@ class PDFImageHandler:
 
         file_ext = ".jpg"
         meta["mime_type"] = "image/jpeg"
-        file_name = self._create_unique_file_name(image=image, ext=file_ext)
 
         img = Image.open(BytesIO(raw_data))
         if LITERAL_DEVICE_CMYK in image.colorspace:
@@ -123,9 +125,10 @@ class PDFImageHandler:
             img = ImageChops.invert(img)
 
         img = img.convert("RGB")
-        meta | ImageParser.parse_meta(img=img)
+        meta |= get_file_meta(img.tobytes())
         if self.extract_children:
-            file_path = self.out_dir / file_name
+            out_file_name = meta["hash"]["md5"] + file_ext
+            file_path = self.out_dir / out_file_name
             img.save(file_path, "JPEG")
             logger.info(f"Saved image to {file_path}")
             meta |= {"file_extension": file_ext, "absolute_path": file_path}
@@ -140,13 +143,12 @@ class PDFImageHandler:
         meta["mime_type"] = "image/jp2"
 
         file_ext = ".jp2"
-        file_name = self._create_unique_file_name(image=image, ext=file_ext)
 
         img = Image.open(BytesIO(raw_data))
-        meta | ImageParser.parse_meta(img=img)
 
         if self.extract_children:
-            file_path = self.out_dir / file_name
+            out_file_name = meta["hash"]["md5"] + file_ext
+            file_path = self.out_dir / out_file_name
             img.save(file_path, "JPEG2000")
             logger.info(f"Saved image to {file_path}")
             meta |= {"file_extension": file_ext, "absolute_path": file_path}
@@ -157,7 +159,6 @@ class PDFImageHandler:
         """Parse a JBIG2 image"""
         file_ext = ".jb2"
         meta["mime_type"] = "image/x-jbig2"
-        file_name = self._create_unique_file_name(image=image, ext=file_ext)
         input_stream = BytesIO()
 
         global_streams = []
@@ -177,38 +178,46 @@ class PDFImageHandler:
         segments = reader.get_segments()
 
         if self.extract_children:
-            file_path = self.out_dir / file_name
-            with open(file_path, "wb") as fb:
+            tmp = tempfile.NamedTemporaryFile()
+            with open(tmp.name, "wb") as fb:
                 writer = JBIG2StreamWriter(fb)
                 writer.write_file(segments)
-            logger.info(f"Saved image to {file_path}")
-            meta |= {"file_extension": file_ext, "absolute_path": file_path}
-
+                fb.seek(0)
+                meta |= {
+                    "hash": get_hashes(fb.read()),
+                    "file_extension": file_ext,        
+                }
+                out_path = self.out_dir / (meta["hash"]["md5"] + file_ext)
+                # copy temp file to output directory
+                shutil.copyfile(tmp.name, out_path)
+                logger.info(f"Saved image to {out_path}")
+                meta |= {"absolute_path": out_path}
         return meta
 
     def _parse_bmp(self, meta: dict, image: LTImage, width: int, height: int, bytes_per_line: int, bits: int) -> dict:
         """Parse a BMP image"""
         file_ext = ".bmp"
         meta["mime_type"] = "image/bmp"
-        file_name = self._create_unique_file_name(image=image, ext=file_ext)
 
         if self.extract_children:
-            file_path = self.out_dir / file_name
-            with open(file_path, "wb") as fb:
+            tmp = tempfile.NamedTemporaryFile()
+            with open(tmp.name, "wb") as fb:
                 writer = BMPWriter(fb, bits=bits, width=width, height=height)
                 data = image.stream.get_data()
                 for i in range(height):
                     writer.write_line(i, data[i : i + bytes_per_line])  # noqa E203
                     i += bytes_per_line
-            logger.info(f"Saved image to {file_path}")
-            meta |= {"file_extension": file_ext, "absolute_path": file_path}
+                meta["hash"] = get_hashes(tmp.name)
+                file_path = self.out_dir / (meta["hash"]["md5"] + file_ext)
+                shutil.copyfile(tmp.name, file_path)
+                logger.info(f"Saved image to {file_path}")
+                meta |= {"file_extension": file_ext, "absolute_path": file_path}
 
         return meta
 
     def _parse_bytes(self, meta: dict, image: LTImage) -> dict:
         """Parse a bytes image"""
         file_ext = ".jpg"
-        file_name = self._create_unique_file_name(image=image, ext=file_ext)
         width, height = image.srcsize
         channels = len(image.stream.get_data()) / (width * height * (image.bits / 8))
 
@@ -226,10 +235,10 @@ class PDFImageHandler:
         if mode == "L":
             img = ImageOps.invert(img)
 
-        meta | ImageParser.parse_meta(img=img)
+        meta |= get_file_meta(img.tobytes())
 
         if self.extract_children:
-            file_path = self.out_dir / file_name
+            file_path = self.out_dir / (meta["hash"]["md5"] + file_ext)
             img.save(file_path, "JPEG")
             logger.info(f"Saved image to {file_path}")
             meta |= {"file_extension": file_ext, "absolute_path": file_path, "mime_type": "image/jpeg"}
@@ -239,13 +248,12 @@ class PDFImageHandler:
     def _parse_raw(self, meta: dict, image: LTImage) -> dict:
         """Parse a raw image with unknown encoding"""
         file_ext = ".bin"
-        file_name = self._create_unique_file_name(image=image, ext=file_ext)
 
         raw_data = image.stream.get_data()
         meta |= get_file_meta(raw_data)
 
         if self.extract_children:
-            file_path = self.out_dir / file_name
+            file_path = self.out_dir / (meta["hash"]["md5"] + file_ext)
             with open(file_path, "wb") as fb:
                 fb.write(raw_data)
             logger.info(f"Saved image to {file_path}")
@@ -261,10 +269,3 @@ class PDFImageHandler:
             if filter_type == LITERALS_JBIG2_DECODE:
                 return True
         return False
-
-    def _create_unique_file_name(self, image: LTImage, ext: str) -> Tuple[str, Path]:
-        """Create a unique file name"""
-        i = self.i + 1
-        file_name = f"{image.name}_{i}{ext}"
-        self.i = i
-        return file_name

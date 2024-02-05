@@ -59,7 +59,7 @@ MIME_TYPE_MAP: dict[str, (FileType, str)] = {
     "image/png": (FileType.image, ".png"),
     "image/tiff": (FileType.image, ".tiff"),
     "image/webp": (FileType.image, ".webp"),
-    "image/wmf": (FileType.image, ".wmf"),
+    "image/wmf": (FileType.unsupported, ".wmf"),
     "image/x-icon": (FileType.image, ".ico"),
     "image/x-jb2": (FileType.image, ".jb2"),
     "image/x-jbig2": (FileType.image, ".jbig2"),
@@ -134,7 +134,7 @@ ADDITIONAL_EXTENSIONS = {
     ".java": (FileType.txt, "text/plain"),
     ".kth": (FileType.ppt, "application/vnd.apple.keynote"),
     ".log": (FileType.log, "text/plain"),
-    ".pot": (FileType.ppt, "application/vnd.ms-powerpoint"),
+    ".pot": (FileType.unsupported, "application/vnd.ms-powerpoint"),
     ".pps": (FileType.ppt, "application/vnd.ms-powerpoint"),
     ".tab": (FileType.tsv, "text/tab-separated-values"),
     ".vb": (FileType.txt, "text/plain"),
@@ -226,7 +226,7 @@ def route_mime_type(
         if mime_type.endswith("/xml"):
             file_type = FileType.html if file_ext and (file_ext in [".html", ".htm"]) else FileType.xml
 
-        elif mime_type == "text/plain":
+        elif mime_type.startswith("text/"):
             # magic overwrites for text files
             if is_mbox(file=file):
                 file_type = FileType.mbox
@@ -267,14 +267,14 @@ def route_mime_type(
                     file_type = FileType.ppt
                     mime_type = "application/vnd.oasis.opendocument.presentation"
                 elif file_ext == ".pot":
-                    file_type = FileType.ppt
+                    file_type = FileType.unsupported
                     mime_type = "application/vnd.ms-powerpoint"
                 elif file_ext in [".key", ".kth"]:
                     file_type = FileType.ppt
                     mime_type = "application/vnd.apple.keynote"
 
     if file_type is None and file_ext is not None:
-        logger.info(f"Using file extension {file_ext} to identify mime type")
+        logger.debug(f"Using file extension {file_ext} to identify mime type")
         file_type, mime_type = EXT_TO_FILETYPE_MIME_MAP.get(file_ext, (file_type, mime_type))
         
     if file_type is None:

@@ -5,6 +5,7 @@ from typing import Iterator
 from rarfile import RarFile, RarInfo
 
 from dd_pyparse.core.parsers.base import FileStreamer
+from dd_pyparse.core.utils.general import get_hashes, safe_open
 from dd_pyparse.schemas.data.parents.file import File
 
 
@@ -14,13 +15,11 @@ class RarParser(FileStreamer):
         """Standardize the file meta"""
         file_sub_path = Path(info.filename)
         file_name = file_sub_path.name if file_sub_path else None
-        date_modified = datetime.fromtimestamp(info.mtime) if info.mtime else None
         date_modified_os = datetime(*info.date_time) if info.date_time else None
-        date_created = datetime.fromtimestamp(info.ctime) if info.ctime else None
 
         return {
-            "date_created": date_created,
-            "date_modified": date_modified or date_modified_os,
+            "date_created": info.ctime,
+            "date_modified": info.mtime or date_modified_os,
             "file_extension": Path(file_name).suffix,
             "file_name": file_name,
             "file_size": info.file_size,
@@ -43,10 +42,14 @@ class RarParser(FileStreamer):
         archive = RarFile(file_path)
         for member in archive.infolist():
             if member.is_file():
-                child = RarParser._standardize_file_meta(member)
+                child = RarParser.standardize_file_meta(member)
                 if extract_children:
-                    out_path = out_dir / child["file_uri"]
-                    out_path.parent.mkdir(parents=True, exist_ok=True)
-                    archive.extract(member, path=out_path.parent, pwd=password)
+                    with archive.open(member, pwd=password) as fb:
+                        child["hash"] = get_hashes(fb)
+                        out_file_name = child["hash"]["md5"] + child.get("file_extension", ".bin")
+                        out_path = out_dir / out_file_name
+                        with safe_open(out_path, "wb") as out:
+                            out.write(fb.read())
+                    # archive.extract(member, path=out_path.parent, pwd=password)
                     child["absolute_path"] = out_path.absolute()
                 yield File(**child)

@@ -36,12 +36,14 @@ class XlsxParser(FileParser):
     def parse_meta(excel: ExcelFile, raw: bool = False, **kwargs) -> dict:
         """Parse the metadata from an xlsx file"""
         meta = excel.book.__dict__.get("properties", {})
-        meta = {k: getattr(meta, k) for k in dir(meta) if not k.startswith("_")}
+        meta = {k: getattr(meta, k) for k in dir(meta) if not k.startswith("_") and k in MAPPINGS}
         meta = {k: (v.decode() if isinstance(v, bytes) else v) for k, v in meta.items() if v}
         language = meta.pop("language", None)
         if language:
+            if '-' in language:
+                language = language.split('-')[0]
             try:
-                language = Language(language).part3
+                language = Language.match(language).part3
                 meta["languages"] = [language]
             except LanguageNotFoundError:
                 logger.warning(f"Failed to parse language {language}")

@@ -5,6 +5,7 @@ from typing import Iterator
 from zipfile import ZipFile, ZipInfo
 
 from dd_pyparse.core.parsers.base import FileStreamer
+from dd_pyparse.core.utils.general import get_hashes, safe_open
 from dd_pyparse.schemas.data.parents.file import File
 
 
@@ -36,8 +37,12 @@ class ZipParser(FileStreamer):
         password = bytes(password, encoding=password_encoding) if isinstance(password, str) else password
         child = ZipParser.standardize_file_meta(info)
         if extract_children:
-            out_path = out_dir / child["file_uri"]
-            archive.extract(info, path=out_dir, pwd=password)
+            with archive.open(info, pwd=password) as fb:
+                child["hash"] = get_hashes(fb)
+                out_file_name = child["hash"]["md5"] + child.get("file_extension", ".bin")
+                out_path = out_dir / out_file_name
+                with safe_open(out_path, "wb") as out:
+                    out.write(fb.read())
             child["absolute_path"] = out_path.absolute()
         return File(**child)
     

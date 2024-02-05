@@ -35,7 +35,7 @@ def get_hashes(file: Path | bytes | BytesIO, byte_size: int = 1024) -> dict[Hash
     _sha256 = sha256()
     _sha512 = sha512()
 
-    if isinstance(file, Path):
+    if isinstance(file, (str, Path)):
         with open(file, "rb") as fb:
             return get_hashes(fb, byte_size=byte_size)
     elif isinstance(file, bytes):
@@ -50,6 +50,7 @@ def get_hashes(file: Path | bytes | BytesIO, byte_size: int = 1024) -> dict[Hash
             _md5.update(data)
             _sha256.update(data)
             _sha512.update(data)
+        file.seek(0)
     else:
         raise TypeError(f"Cannot get hashes for {type(file)}")
 

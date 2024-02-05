@@ -14,6 +14,7 @@ class TxtParser(FileParser):
         **kwargs,
     ) -> dict:
         """Parse a txt file"""
+        out = {}
         if isinstance(file, bytes):
             encoding = encoding or "utf-8"
             text = file.decode(encoding=encoding)
@@ -25,4 +26,5 @@ class TxtParser(FileParser):
         if cleaned:
             text = clean(text, extra_whitespace=True, trailing_punctuation=True)
         if text:
-            return {"text": {"source": text}}
+            out["text"] = {"source": text}
+        return out

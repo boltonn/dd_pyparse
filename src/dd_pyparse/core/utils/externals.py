@@ -1,4 +1,5 @@
 import subprocess
+from uuid import uuid4
 from pathlib import Path
 
 from loguru import logger
@@ -15,6 +16,7 @@ def convert_with_libre(file_path: Path, tmp_dir: Path, target_format: str, timeo
     logger.debug(f"Converting {file_path} to {target_format=} at: {out_path}")
     command = [
         "soffice",
+        f"-env:UserInstallation=file:///tmp/{uuid4().hex}",
         "--headless",
         "--convert-to",
         target_format,

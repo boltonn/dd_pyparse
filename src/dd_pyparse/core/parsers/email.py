@@ -48,7 +48,7 @@ class EmailParser(FileParser):
         except LookupError:
             detected_encoding = chardet.detect(content).get("encoding")
             if detected_encoding:
-                logger.debug(f"Using ddetected encoding {detected_encoding=}")
+                logger.debug(f"Using detected encoding {detected_encoding=}")
                 return content.decode(detected_encoding, errors="ignore")
             else:
                 logger.warning("Unable to detect encoding so falling back to ignore errors w/ utf-8")

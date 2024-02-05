@@ -4,6 +4,7 @@ from tarfile import TarFile, TarInfo
 from typing import Iterator
 
 from dd_pyparse.core.parsers.base import FileStreamer
+from dd_pyparse.core.utils.general import get_hashes, safe_open
 from dd_pyparse.schemas.data.parents.file import File
 
 
@@ -41,9 +42,13 @@ class TarParser(FileStreamer):
             if member.isfile():
                 child = TarParser.standardize_file_meta(member)
                 if extract_children:
-                    out_path = out_dir / child["file_uri"]
-                    out_path.parent.mkdir(parents=True, exist_ok=True)
-                    archive.extract(member, path=out_dir)
+                    with archive.extractfile(member) as fb:
+                        child["hash"] = get_hashes(fb)
+                        out_file_name = child["hash"]["md5"] + child.get("file_extension", ".bin")
+                        out_path = out_dir / out_file_name
+                        with safe_open(out_path, "wb") as out:
+                            out.write(fb.read())
+                    # archive.extract(member, path=out_dir)
                     child["absolute_path"] = out_path.absolute()
                 yield File(**child)
         archive.close()

@@ -45,14 +45,14 @@ class Processor:
 
     def _handle_child(self, child: Type[Base]):
         if child.__repr_name__() == "File":
-            logger.info(f"Putting file {child.absolute_path} in queue")
+            logger.debug(f"Putting file {child.absolute_path} in queue")
             self.queue.put(child)
         else:
             logger.debug(f"Writing {child}")
             self.write(child)
 
     def _process(self, file: Type[File]):
-        logger.info(f"Processing {file.absolute_path}")
+        """Process a file"""
         out = get_file_meta(file.absolute_path)
         file_type = out.get("file_type")
         
@@ -63,10 +63,9 @@ class Processor:
             return
         
         parser, validator = route_parser(file_type)
-        out_dir = self.children_dir / file.id 
 
         if parser.__base__ == FileParser:
-            out |= parser.parse(file=file.absolute_path, extract_children=self.extract_children, out_dir=out_dir, **self.kwargs)
+            out |= parser.parse(file=file.absolute_path, extract_children=self.extract_children, out_dir=self.children_dir, **self.kwargs)
 
             out = out | file.model_dump(mode="dict", exclude_none=True)
             out = validator(**out)
@@ -77,11 +76,11 @@ class Processor:
             self.write(out)
 
         elif parser.__base__ == FileStreamer:
-            for child in parser.stream(file_path=file.absolute_path, extract_children=self.extract_children, out_dir=out_dir, **self.kwargs):
+            for child in parser.stream(file_path=file.absolute_path, extract_children=self.extract_children, out_dir=self.children_dir, **self.kwargs):
                 child.parent_id = file.id
                 if child.children:
-                    for child in child.children:
-                        self._handle_child(child)
+                    for _child in child.children:
+                        self._handle_child(_child)
                     del child.children
                 self._handle_child(child)
 
@@ -94,10 +93,12 @@ class Processor:
 
     def _worker(self):
         while True:
+            # get file from queue and make sure other workers don't process it
             file = self.queue.get()
             if file is None:
                 break
             try:
+                
                 self._process(file)
             except Exception as e:
                 logger.error(f"Error processing {file.absolute_path}: {e}")
@@ -157,8 +158,18 @@ def process(
     processor.run()
 
 
-if __name__ == "__main__":
+def main():
     import argparse
+
+    def str2bool(v):
+        if isinstance(v, bool):
+            return v
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
 
     parser = argparse.ArgumentParser(description="Process files")
     parser.add_argument("--in_dir", type=Path, help="Input directory", required=True, default=None)
@@ -172,9 +183,10 @@ if __name__ == "__main__":
     parser.add_argument("--out_dir", type=Path, help="Output directory", required=True, default=None)
     parser.add_argument("--dataset", type=str, help="Dataset", required=True, default=None)
     parser.add_argument("--num_workers", type=int, help="Number of workers", required=True, default=None)
-    parser.add_argument("--extract_children", action="store_true", help="Extract children")
+    parser.add_argument("--extract_children", type=str2bool, default=True, help="Extract children")
     parser.add_argument("--pattern", type=str, help="Pattern", required=False, default="*")
     args = parser.parse_args()
+    logger.info(f"Running with {args=}")
 
     process(
         in_dir=args.in_dir,
@@ -185,3 +197,6 @@ if __name__ == "__main__":
         extract_children=args.extract_children,
         pattern=args.pattern,
     )
+
+if __name__ == "__main__":
+    main()

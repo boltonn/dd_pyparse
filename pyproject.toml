@@ -9,7 +9,9 @@ dependencies = [
     "loguru",
     "msg-parser",
     "numpy",
+    "odfpy",
     "opencv-python",
+    "pandas",
     "pdfminer.six",
     "pillow",
     "pillow-avif-plugin",
@@ -23,6 +25,7 @@ dependencies = [
     "py7zr",
     "rarfile",
     "tabulate",
+    "xlrd",
 ]
 
 [project.optional-dependencies]
@@ -34,3 +37,4 @@ package-dir = {"" = "src"}
 
 [project.scripts]
 api = "dd_pyparse.interfaces._fastapi:main"
+cli = "dd_pyparse.interfaces._cli:main"

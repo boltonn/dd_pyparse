@@ -29,13 +29,13 @@ class XlsParser(FileParser):
         """Parse the metadata from an xls file"""
         with olefile.OleFileIO(file) as ole:
             meta = ole.get_metadata()
-            meta = {k: getattr(meta, k) for k in meta.SUMMARY_ATTRIBS + meta.DOCSUM_ATTRIBS}
+            meta = {k: getattr(meta, k) for k in meta.SUMMARY_ATTRIBS + meta.DOCSUM_ATTRIBS if k in MAPPINGS}
             meta = {k: (v.decode() if isinstance(v, bytes) else v) for k, v in meta.items() if v}
 
             language = meta.pop("language", None)
             if language:
                 try:
-                    language = Language(language).part3
+                    language = Language.match(language).part3
                     meta["languages"] = [language]
                 except LanguageNotFoundError:
                     logger.warning(f"Failed to parse language {language}")
@@ -49,9 +49,17 @@ class XlsParser(FileParser):
         **kwargs,
     ) -> dict:
         """Parse an xls file"""
-        excel = ExcelFile(file)
+
+            
+
         out = XlsParser.parse_meta(file=file, raw=True)
-        text = XlsxParser.parse(excel=excel, encoding=encoding, **kwargs)
+        text = None
+        try:
+            excel = ExcelFile(file)
+            text = XlsxParser.parse_text(excel=excel, encoding=encoding, paginated=False, **kwargs)
+        except KeyError:
+            logger.error(f"Failed to parse text out of {file} because not valid xls file")
+
         if text:
-            out["text"]["source"] = text
+            out["text"] = {"source": text}
         return out

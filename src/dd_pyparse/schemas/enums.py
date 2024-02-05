@@ -88,6 +88,7 @@ class Direction(StrEnum):
 
 class FileType(StrEnum):
     unknown = "unknown"
+    unsupported = "unsupported"
     bz2 = "bz2"
     code = "code"
     csv = "csv"
