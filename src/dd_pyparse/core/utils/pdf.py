@@ -107,7 +107,7 @@ class PDFImageHandler:
         elif len(filters) == 1 and filters[0][0] in LITERALS_FLATE_DECODE:
             meta = self._parse_bytes(meta=meta, image=image)
         else:
-            meta = self._parse_raw(image=image)
+            meta = self._parse_raw(meta=meta, image=image)
 
         return ImageSchema(**meta)
 

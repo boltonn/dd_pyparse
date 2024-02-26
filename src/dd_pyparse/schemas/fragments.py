@@ -25,27 +25,15 @@ class Hash(BaseModel):
     """Hash data"""
 
     md5: str = Field(None, description="md5 hash")
-    sha1: str = Field(None, description="sha1 hash")
+    meaningful: str = Field(None, description="Meaningful hash")
     sha256: str = Field(None, description="sha256 hash")
     sha512: str = Field(None, description="sha512 hash")
-    sha3_256: str = Field(None, description="sha3_256 hash")
-    sha3_512: str = Field(None, description="sha3_512 hash")
-    blake2b: str = Field(None, description="blake2b hash")
-    blake2s: str = Field(None, description="blake2s hash")
-    sha224: str = Field(None, description="sha224 hash")
-    sha384: str = Field(None, description="sha384 hash")
-    shake_128: str = Field(None, description="shake_128 hash")
-    shake_256: str = Field(None, description="shake_256 hash")
-    sha3_224: str = Field(None, description="sha3_224 hash")
-    sha3_384: str = Field(None, description="sha3_384 hash")
-    blake3: str = Field(None, description="blake3 hash")
-
 
 class Reference(BaseModel):
     """Reference to another source"""
 
     name: str = Field(..., description="Name of the system")
-    id: str = Field(..., description="ID of the object in another system")
+    url: str = Field(..., description="URL of the object in another system")
 
 
 class Text(BaseModel):

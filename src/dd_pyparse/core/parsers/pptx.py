@@ -51,10 +51,10 @@ class PptxParser(FileParser):
                     child = PptxParser.parse_image(shape, extract_children=extract_children, out_dir=out_dir)
                     if child:
                         children.append(child)
-                elif shape.media_type == PP_MEDIA_TYPE.AUDIO:
+                elif hasattr(shape, "media_type") and shape.media_type == PP_MEDIA_TYPE.AUDIO:
                     logger.error("Found a audio file, but we don't support parsing it yet")
                     continue
-                elif shape.media_type == PP_MEDIA_TYPE.MOVIE:
+                elif hasattr(shape, "media_type") and shape.media_type == PP_MEDIA_TYPE.MOVIE:
                     # save the movie file
                     logger.error("Found a video file, but we don't support parsing it yet")
                     continue

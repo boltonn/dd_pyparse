@@ -256,6 +256,26 @@ class EmailParser(FileParser):
             except LanguageNotFoundError:
                 logger.warning(f"Unable to parse language {language}")
 
+        folder = header.get("X-Folder", None)
+        
+        if folder is not None:
+            state = None
+            for key, mapping in {
+                "archive": "archived",
+                "deleted": "deleted",
+                "draft": "draft",
+                "flag": "flagged",
+                "important": "flagged",
+                "sent": "sent",
+                "spam": "spam",
+                "star": "starred",
+            }:
+                if key in folder.lower():
+                    state = mapping
+                    break
+            if state is not None:
+                out["state"] = state
+
         if return_raw_header:
             out["header"] = header
 
@@ -325,7 +345,7 @@ class EmailParser(FileParser):
     def parse(
         file: bytes | Path,
         encoding: str = None,
-        return_raw_header: bool = False,
+        return_raw_header: bool = True,
         extract_children: bool = False,
         out_dir: Path = None,
     ):
