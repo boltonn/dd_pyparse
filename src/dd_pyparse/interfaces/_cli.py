@@ -69,7 +69,7 @@ class Processor:
 
             out = out | file.model_dump(mode="dict", exclude_none=True)
             out = validator(**out)
-            if out.children:
+            if out.children and self.extract_children:
                 for child in out.children:
                     self._handle_child(child)
                 del out.children
@@ -78,7 +78,7 @@ class Processor:
         elif parser.__base__ == FileStreamer:
             for child in parser.stream(file_path=file.absolute_path, extract_children=self.extract_children, out_dir=self.children_dir, **self.kwargs):
                 child.parent_id = file.id
-                if child.children:
+                if child.children and self.extract_children:
                     for _child in child.children:
                         self._handle_child(_child)
                     del child.children
@@ -177,7 +177,6 @@ def main():
         "--children_dir",
         type=Path,
         help="Children directory",
-        required=True,
         default=None,
     )
     parser.add_argument("--out_dir", type=Path, help="Output directory", required=True, default=None)
@@ -187,6 +186,8 @@ def main():
     parser.add_argument("--pattern", type=str, help="Pattern", required=False, default="*")
     args = parser.parse_args()
     logger.info(f"Running with {args=}")
+    if args.extract_children and not args.children_dir:
+        raise ValueError("Must provide children_dir if extract_children is True")
 
     process(
         in_dir=args.in_dir,
